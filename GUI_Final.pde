@@ -22,6 +22,13 @@ public class data
     IntList hr;
     IntList datalight;
     FloatList datatemp;
+    
+    data()
+    {
+        this.hr = null;
+        this.datalight=null;
+        this.datatemp=null;
+    }
 }
 
 data sept11 = new data();
@@ -31,14 +38,14 @@ void setup()
     size(500, 500);
         
     table = loadTable("data.csv", "header");
-    for (TableRow row : table.rows()) 
-    {
-        int hour = row.getInt("hours");
-        float temperature  = row.getFloat("temperature");
-        int light = row.getInt("light");
+    //for (TableRow row : table.rows()) 
+    //{
+    //    int hour = row.getInt("hours");
+    //    float temperature  = row.getFloat("temperature");
+    //    int light = row.getInt("light");
         
-        //println(hour + " " + temperature + " " + light);
-    }
+    //    //println(hour + " " + temperature + " " + light);
+    //}
     
     sept11.hr = new IntList();
     sept11.datalight = new IntList();
@@ -91,7 +98,7 @@ void setup()
 
 void controlEvent(ControlEvent theEvent)
 {
-    so = cp5.getController("TIMESLOT").getLabel(); 
+    so = theEvent.getController().getLabel(); 
     
     b = sept11.datalight.size();
     switch(so)
@@ -277,8 +284,10 @@ void draw()
     text("Averaged data", 50, 180);
     textSize(16);
     text("Choose timeslot", 75, 210);
-    text(lightave, 75, 300);
-    text(tempave, 75, 350); //<>//
+    text("Light:", 75, 300);
+    text("Temperature:", 75, 350);
+    text(lightave, 300, 300);
+    text(tempave, 300, 350); //<>//
 }
 
 void serialEvent(Serial myPort)
@@ -325,15 +334,25 @@ void average(int time)
     float lightaverage=0,tempaverage=0;
     for (int a=1; a<b; a++)
     {        
-        if(sept11.hr.get(a) == time)
+        if(sept11.hr.get(a) == time && sept11.datatemp.get(a)>=15 && sept11.datatemp.get(a)<30)
         {   
             lightsum += sept11.datalight.get(a);
             tempsum += sept11.datatemp.get(a);
+            count++;
         }
-        count = float(a);                  
+        //count = float(a);                  
     }
-    lightaverage = lightsum/count;
-    tempaverage = tempsum/count;
+    println(count);
+    try
+    {
+        lightaverage = lightsum/count;
+        tempaverage = tempsum/count;
+    }
+    catch (Exception e)
+    {
+        println("Error");
+        e.printStackTrace();
+    }
     so = "";
     lightsum=0;
     tempsum=0;
