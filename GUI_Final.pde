@@ -7,25 +7,13 @@ import java.io.FileWriter;
 ControlP5 cp5;
 Serial myPort;
 
-PrintWriter output; 
-float lightave=0, tempave=0, tempc=0;
+float lightave=0, tempave=0, tempc=0, prevTempc;
 String so,val;
 int lightsum=0, tempsum=0, b=0, lf=10, lightint=0, prevLightint;
 
-IntList datal;
-FloatList datat;
-
-int[] lightarr = {0};
-float[] temparr = {0};
-
-int s;  // Values from 0 - 59
-int m;  // Values from 0 - 59
-int h;    // Values from 0 - 23
-float prevTempc=tempc;
+int s, m, h; //Time
 
 List l = Arrays.asList("00-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7", "7-8", "8-9", "9-10", "10-11", "11-12", "12-13", "13-14", "14-15", "15-16", "16-17", "17-18", "18-19", "19-20", "20-21", "21-22", "22-23", "23-00");
-
-int mil1, mil2;
 
 Table table;
 
@@ -41,9 +29,7 @@ data sept11 = new data();
 void setup()
 {
     size(500, 500);
-    
-    //parseFile();
-    
+        
     table = loadTable("data.csv", "header");
     for (TableRow row : table.rows()) 
     {
@@ -51,7 +37,7 @@ void setup()
         float temperature  = row.getFloat("temperature");
         int light = row.getInt("light");
         
-        println(hour + " " + temperature + " " + light);
+        //println(hour + " " + temperature + " " + light);
     }
     
     sept11.hr = new IntList();
@@ -61,7 +47,7 @@ void setup()
     for (TableRow row : table.rows())
     {
         sept11.hr.append(row.getInt("hours"));
-        sept11.datatemp.append(row.getInt("temperature"));
+        sept11.datatemp.append(row.getFloat("temperature"));
         sept11.datalight.append(row.getInt("light"));
     }
     
@@ -99,9 +85,7 @@ void setup()
     String portName = Serial.list()[2];
     myPort = new Serial(this, portName, 9600);
     myPort.bufferUntil(lf);
-    
-    //output = createWriter("data.csv"); 
-        
+            
     delay(1000);
 }
 
@@ -261,8 +245,7 @@ void controlEvent(ControlEvent theEvent)
 void draw()
 {                 
     background(255);
-    mil1 = millis();
-   
+    
     //current time
     h=hour();
     m=minute();
@@ -295,16 +278,7 @@ void draw()
     textSize(16);
     text("Choose timeslot", 75, 210);
     text(lightave, 75, 300);
-    text(tempave, 75, 350);
-    
-//    if (mil1 - mil2 >= 2000)
-//    {
-//        mil2 = mil1;
-//        output.println(h + "," + m + "," + s + "," + tempc + "," + lightint);
-//        println("y");
-//    }
-
-    //output.println(h + "," + m + "," + s + "," + tempc + "," + lightint); //<>//
+    text(tempave, 75, 350); //<>//
 }
 
 void serialEvent(Serial myPort)
@@ -324,13 +298,11 @@ void serialEvent(Serial myPort)
             lightint = int(sensorData[0]);
             sept11.hr.append(h);
             sept11.datalight.append(lightint);           
-            //println(sept11.datalight);
             prevTempc=tempc;
             tempc = float(sensorData[1]);
             sept11.datatemp.append(tempc);
             
             maketable();
-            //println(datat);
         }
     }
     
@@ -343,24 +315,22 @@ void serialEvent(Serial myPort)
 
 void keyPressed() 
 {
-    //output.flush();
-    //output.close();
-    
     exit();
 }
 
 void average(int time)
 {
+    println("average");
     float count=0;
     float lightaverage=0,tempaverage=0;
     for (int a=1; a<b; a++)
     {        
-        if(sept11.hr.get(a) == time)      
+        if(sept11.hr.get(a) == time)
         {   
-            lightsum+=sept11.datalight.get(a);
-            tempsum+=sept11.datatemp.get(a);        
+            lightsum += sept11.datalight.get(a);
+            tempsum += sept11.datatemp.get(a);
         }
-        count=(float) a;                  
+        count = float(a);                  
     }
     lightaverage = lightsum/count;
     tempaverage = tempsum/count;
@@ -371,25 +341,6 @@ void average(int time)
     tempave = tempaverage;
 }
 
-//void parseFile() 
-//{
-//  // Open the file from the createWriter() example
-//  BufferedReader reader = createReader("data.csv");
-//  String line = null;
-//  try {
-//    while ((line = reader.readLine()) != null) {
-//      String[] pieces = split(line, '\t');
-//      hr1 = int(pieces[0]);
-//      int temp1 = int(pieces[3]);
-//      int temp2 = int(pieces[4]);
-//      println(hr1, temp1, temp2);
-//    }
-//    reader.close();
-//  } catch (IOException e) {
-//    e.printStackTrace();
-//  }
-//} 
-
 void maketable()
 {
     TableRow newRow = table.addRow();
@@ -398,5 +349,4 @@ void maketable()
     newRow.setInt("light", lightint);
     saveTable(table, "data.csv");
     println("working");
-  
 }
